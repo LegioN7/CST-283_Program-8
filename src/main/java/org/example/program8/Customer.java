@@ -5,19 +5,34 @@ package org.example.program8;
  * It holds information about the customer's checkout difficulty, arrival time, enqueue time, checkout start time, and checkout end time.
  */
 public class Customer {
-    private Difficulty checkoutDifficulty;
     private static int idCounter = 0;
-    private int id;
+    private Difficulty checkoutDifficulty;
+    private final int id;
     private int arrivalTime;
     private int enqueueTime;
     private int dequeueTime;
     private int checkoutStartTime;
     private int checkoutEndTime;
 
+    /**
+     * Constructs a new Customer with a unique ID.
+     */
     public Customer() {
         id = idCounter++;
     }
 
+    /**
+     * Resets the ID for the next customer.
+     */
+    public static void resetId() {
+        idCounter = 0;
+    }
+
+    /**
+     * Returns the ID of the customer.
+     *
+     * @return The ID of the customer.
+     */
     public int getId() {
         return id;
     }
@@ -95,7 +110,6 @@ public class Customer {
     public void setDequeueTime(int dequeueTime) {
         this.dequeueTime = dequeueTime;
     }
-
 
 
     /**

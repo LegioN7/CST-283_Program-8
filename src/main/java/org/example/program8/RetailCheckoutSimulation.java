@@ -47,6 +47,11 @@ public class RetailCheckoutSimulation extends Application {
     private Button startButton;
 
     /**
+     * Button for resetting the simulation.
+     */
+    private Button resetButton;
+
+    /**
      * Button for exiting the simulation.
      */
     private Button exitButton;
@@ -167,9 +172,26 @@ public class RetailCheckoutSimulation extends Application {
      * Resets the simulation by clearing the text area and resetting the buttons.
      */
     private void resetSimulation() {
+        // Clear the text area
         textArea.clear();
-        startButton.setDisable(true);
-        exitButton.setDisable(true);
+
+        // Enable the start and exit buttons
+        startButton.setDisable(false);
+        exitButton.setDisable(false);
+
+        // Reset the simulation
+        simulation = new SimulationLogic();
+
+        // Reset the UI Selections
+        checkoutLines1.setSelected(false);
+        checkoutLines2.setSelected(true);
+        checkoutLines3.setSelected(false);
+
+        customerArrivalSlider.setValue(60);
+
+        easyCustomerTextField.setText("20");
+        mediumCustomerTextField.setText("60");
+        difficultCustomerTextField.setText("20");
     }
 
     /**
@@ -201,6 +223,12 @@ public class RetailCheckoutSimulation extends Application {
         return startButton;
     }
 
+    private Button createResetButton () {
+        resetButton = new Button("Reset Simulation");
+        resetButton.setOnAction(event -> resetSimulation());
+        return resetButton;
+    }
+
     /**
      * Creates a button for exiting the simulation.
      * @return The created exit button.
@@ -217,8 +245,6 @@ public class RetailCheckoutSimulation extends Application {
     private void startSimulation() {
         int numberOfLines = 0;
 
-        resetSimulation();
-
         if (checkoutLines1.isSelected()) {
             numberOfLines = 1;
         } else if (checkoutLines2.isSelected()) {
@@ -226,6 +252,8 @@ public class RetailCheckoutSimulation extends Application {
         } else if (checkoutLines3.isSelected()) {
             numberOfLines = 3;
         }
+
+        resetSimulation();
 
         int customerArrivalFrequency = (int) customerArrivalSlider.getValue();
 
@@ -238,6 +266,10 @@ public class RetailCheckoutSimulation extends Application {
         } catch (NumberFormatException e) {
             textArea.appendText("Invalid percentage entered\n");
         }
+
+        // Disable the start button and enable the reset button
+        startButton.setDisable(true);
+        resetButton.setDisable(false);
 
         updateUI();
     }
@@ -276,7 +308,11 @@ public class RetailCheckoutSimulation extends Application {
 
         root.getChildren().add(createTextArea());
         root.getChildren().add(createStartButton());
+        root.getChildren().add(createResetButton());
         root.getChildren().add(createExitButton());
+
+        // Disable the reset button until the simulation has been started
+        resetButton.setDisable(true);
 
         simulation = new SimulationLogic();
 

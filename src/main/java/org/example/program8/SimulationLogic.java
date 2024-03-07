@@ -22,8 +22,8 @@ package org.example.program8;
         Average customer wait time (for each queue as well as further averaged for all customers)
         Idle time for workers (for each worker managing a queue as well as for all workers during the day)
 
-    Package your simulation within its own class
-    Create a GUI “front-end” driver.
+    Package your simulation within its own class:
+        Create a GUI “front-end” driver.
 
     Your GUI should include at least the following:
     Radio button or similar component to allow selection of 1, 2, or 3 open lines
@@ -50,6 +50,7 @@ package org.example.program8;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * This class represents the logic for a retail store checkout simulation.
@@ -80,6 +81,12 @@ public class SimulationLogic {
      * Duration of the simulation in seconds. Represents a 12-hour work day.
      */
     private static final double SIMULATION_DURATION = 43200.0;
+
+    /**
+     * List of customers in the simulation.
+     */
+    List<Customer> customers;
+
     /**
      * List of checkout lines in the simulation.
      */
@@ -88,29 +95,40 @@ public class SimulationLogic {
 
     // Customer Variables
     /**
+     * Maximum number of customers that can be created in the simulation.
+     */
+    int maximumCustomers;
+
+    /**
      * Total number of customers created in the simulation.
      */
     int totalCustomersCreated = 0;
+
     /**
      * Count of easy customers created in the simulation.
      */
     int easyCustomersCount = 0;
+
     /**
      * Count of medium customers created in the simulation.
      */
     int mediumCustomersCount = 0;
+
     /**
      * Count of difficult customers created in the simulation.
      */
     int difficultCustomersCount = 0;
+
     /**
      * Total number of customers checked out in the simulation.
      */
     int totalCustomersCheckedOut = 0;
+
     /**
      * Array storing the total number of customers checked out per line in the simulation.
      */
     int[] totalCustomersCheckedOutPerLine;
+
 
     /**
      * Total waiting time for all customers in the simulation.
@@ -121,6 +139,7 @@ public class SimulationLogic {
      * Array storing the total waiting time for customers per line in the simulation.
      */
     int[] totalCustomerWaitingTimePerLine;
+
     /**
      * Total checkout time for all customers in the simulation.
      */
@@ -150,6 +169,14 @@ public class SimulationLogic {
         totalCustomerWaitingTime = 0;
         totalCustomersCheckedOut = 0;
         totalCustomerCheckoutTime = 0;
+
+        // Reset the checkout line variables
+        if (checkoutLines != null) {
+            checkoutLines.clear();
+        }
+
+        // Reset the customer ID
+        Customer.resetId();
     }
 
     /**
@@ -171,6 +198,18 @@ public class SimulationLogic {
         // Initialize the array for the total checkout time of customers per line
         totalCustomerCheckoutTimePerLine = new int[numberOfLines];
 
+        // To assign difficulty correctly, we need to calculate the maximum number of customers
+        maximumCustomers = (int) Math.ceil(SIMULATION_DURATION / customerArrivalFrequency);
+
+        // Calculate the number of customers for each difficulty
+        int easyCustomers = maximumCustomers * easyCustomerPercentage / 100;
+        int mediumCustomers = maximumCustomers * mediumCustomerPercentage / 100;
+        int difficultCustomers = maximumCustomers * difficultCustomerPercentage / 100;
+
+        easyCustomersCount = easyCustomers;
+        mediumCustomersCount = mediumCustomers;
+        difficultCustomersCount = difficultCustomers;
+
         // Reset the simulation
         resetSimulation();
 
@@ -183,9 +222,9 @@ public class SimulationLogic {
         }
 
         // Create the customer array list
-        List<Customer> customers = new ArrayList<>();
+        customers = new ArrayList<>();
 
-        // Loop through the simulation duration of 12 hours
+        // Loop through the simulation duration of 12 hours to create customers
         for (int time = 1; time <= SIMULATION_DURATION; time++) {
             // Create a new customer if the modulo of the time and the customer arrival frequency is zero
             if (time % customerArrivalFrequency == 0) {
@@ -194,20 +233,34 @@ public class SimulationLogic {
                 // Add the customer to the list
                 customers.add(customer);
                 // Assign a checkout difficulty to each customer
-                assignCustomerCheckoutDifficulty(customers, easyCustomerPercentage, mediumCustomerPercentage, difficultCustomerPercentage);
+                assignCustomerCheckoutDifficulty(customer);
                 // Set the arrival time for the customer (Creation time)
                 customer.setArrivalTime(time);
-                // Check if the checkout lines are empty
-                checkEmptyCheckoutLines(time);
-                // Assign the customer to the shortest queue
-                assignToShortestQueue(customer, time);
-                // Set the customer's enqueue time
-                customer.setEnqueueTime(time);
-                // Process the checkout lines
-                processCheckoutLines(time);
                 // Increment the total number of customers created
                 totalCustomersCreated++;
             }
+
+
+            // Assign customers to queues at the time of their arrival
+            for (Customer customer : customers) {
+                if (customer.getArrivalTime() == time) {
+                    // Check if the checkout lines are empty
+                    checkEmptyCheckoutLines();
+                    // Assign the customer to the shortest queue
+                    assignToShortestQueue(customer, time);
+                    // Set the customer's enqueue time
+                    customer.setEnqueueTime(time);
+                }
+            }
+
+            // Process the checkout lines
+            processCheckoutLines(time);
+        }
+
+        // Continue processing the checkout lines until all customers have been checked out
+        for (int time = (int) SIMULATION_DURATION + 1; totalCustomersCheckedOut < totalCustomersCreated; time++) {
+            // Process the checkout lines
+            processCheckoutLines(time);
         }
     }
 
@@ -224,46 +277,38 @@ public class SimulationLogic {
     /**
      * Assigns a checkout difficulty to each customer in the given list.
      *
-     * @param customers                   The list of customers.
-     * @param easyCustomerPercentage      The percentage of customers that are easy to check out.
-     * @param mediumCustomerPercentage    The percentage of customers that are medium to check out.
-     * @param difficultCustomerPercentage The percentage of customers that are difficult to check out.
+     * @param customer                   The list of customers.
      */
-    private void assignCustomerCheckoutDifficulty(List<Customer> customers, int easyCustomerPercentage, int mediumCustomerPercentage, int difficultCustomerPercentage) {
-        // Calculate the number of customers for each difficulty
-        int easyCustomers = customers.size() * easyCustomerPercentage / 100;
-        int mediumCustomers = customers.size() * mediumCustomerPercentage / 100;
-        int difficultCustomers = customers.size() - easyCustomers - mediumCustomers;
-
-        // Reset the customer counts
-        easyCustomersCount = 0;
-        mediumCustomersCount = 0;
-        difficultCustomersCount = 0;
-
-        // Loop through the customers and assign a checkout difficulty to each customer
-        for (int i = 0; i < customers.size(); i++) {
-            if (i < easyCustomers) {
-                customers.get(i).setCheckoutDifficulty(Customer.Difficulty.EASY);
-                easyCustomersCount++;
-            } else if (i < easyCustomers + mediumCustomers) {
-                customers.get(i).setCheckoutDifficulty(Customer.Difficulty.MEDIUM);
-                mediumCustomersCount++;
-            } else if (i < easyCustomers + mediumCustomers + difficultCustomers) {
-                customers.get(i).setCheckoutDifficulty(Customer.Difficulty.DIFFICULT);
-                difficultCustomersCount++;
+    private void assignCustomerCheckoutDifficulty(Customer customer) {
+        Random random = new Random();
+            while (true) {
+                int randomValue = random.nextInt(3) + 1;
+                if (randomValue == 1 && easyCustomersCount > 0) {
+                    customer.setCheckoutDifficulty(Customer.Difficulty.EASY);
+                    easyCustomersCount--;
+                    break;
+                } else if (randomValue == 2 && mediumCustomersCount > 0) {
+                    customer.setCheckoutDifficulty(Customer.Difficulty.MEDIUM);
+                    mediumCustomersCount--;
+                    break;
+                } else if (randomValue == 3 && difficultCustomersCount > 0) {
+                    customer.setCheckoutDifficulty(Customer.Difficulty.DIFFICULT);
+                    difficultCustomersCount--;
+                    break;
+                }
             }
-        }
     }
 
-    /**
-     * Assigns the given customer to the shortest queue.
-     *
-     * @param customer    The customer to assign.
-     * @param CurrentTime The current time.
-     */
+
+            /**
+             * Assigns the given customer to the shortest queue.
+             *
+             * @param customer    The customer to assign.
+             * @param CurrentTime The current time.
+             */
     private void assignToShortestQueue(Customer customer, int CurrentTime) {
         // Get the shortest queue
-        CustomerQueue<Customer> shortestQueue = checkoutLines.getFirst();
+        CustomerQueue<Customer> shortestQueue = checkoutLines.get(0);
 
         // Loop through the checkout lines and find the shortest queue
         for (CustomerQueue<Customer> queue : checkoutLines) {
@@ -281,18 +326,16 @@ public class SimulationLogic {
 
     /**
      * Checks if the checkout lines are empty and increments the idle time for the workers.
-     *
-     * @param time The current time.
      */
-    private void checkEmptyCheckoutLines(int time) {
+    private void checkEmptyCheckoutLines() {
         int i = 0;
 
         // Loop through the checkout lines
         for (CustomerQueue<Customer> checkoutLine : checkoutLines) {
-                if (checkoutLine.isEmpty()) {
-                // Increment the idle time for the worker
-                totalWorkerIdleTimePerLine[i] += time;
-                totalWorkerIdleTime += time;
+            if (checkoutLine.isEmpty()) {
+                // Increment the idle time for the worker by 1 second
+                totalWorkerIdleTimePerLine[i]++;
+                totalWorkerIdleTime++;
             }
             i++;
         }
@@ -319,6 +362,7 @@ public class SimulationLogic {
                     }
                     // Dequeue the customer if the checkout time has been reached for 60 seconds
                     if (time >= customer.getCheckoutStartTime() + EASY_CHECKOUT_TIME) {
+                        dequeueCustomer(checkoutLine, checkoutLines.indexOf(checkoutLine), time);
                         totalCustomerCheckoutTime += EASY_CHECKOUT_TIME;
                     }
                 } else if (customer.getCheckoutDifficulty() == Customer.Difficulty.MEDIUM) {
@@ -354,10 +398,13 @@ public class SimulationLogic {
      * @param currentTime The current time.
      */
     private void dequeueCustomer(CustomerQueue<Customer> queue, int lineIndex, int currentTime) {
+
         // Dequeue the customer
         Customer customer = queue.dequeue(currentTime);
+
         // Set the dequeue time for the customer
         customer.setDequeueTime(currentTime);
+
         // Set the checkout end time for the customer
         customer.setCheckoutEndTime(currentTime);
 
@@ -372,10 +419,12 @@ public class SimulationLogic {
 
         // Increment the total customers checked out
         totalCustomersCheckedOut++;
+
         // Increment the total customers checked out for the line
         totalCustomersCheckedOutPerLine[lineIndex]++;
-        // Add the checkout duration to the total customer checkout time
-        totalCustomerCheckoutTime += customer.getCheckoutDuration();
+
+        // Debug Statement
+        // System.out.println("Customer " + customer.getId() + " created at " + customer.getArrivalTime() + " seconds, enqueued at " + customer.getEnqueueTime() + " seconds, started checkout at " + customer.getCheckoutStartTime() + " seconds, dequeued at " + customer.getDequeueTime() + " seconds, wait time: " + customer.getWaitingTime() + " seconds, difficulty: " + customer.getCheckoutDifficulty());    }
     }
 
     /**
@@ -383,7 +432,28 @@ public class SimulationLogic {
      *
      * @return A string containing the customer statistics.
      */
-    private String generateCustomerStats() {
+    private String generateCustomerStats(List<Customer> customers) {
+        // Count the number of easy, medium, and difficult customers
+        int easyCustomersCount = 0;
+        int mediumCustomersCount = 0;
+        int difficultCustomersCount = 0;
+
+        // Loop through the customers and count the number of easy, medium, and difficult customers
+        for (Customer customer : customers) {
+            switch (customer.getCheckoutDifficulty()) {
+                case EASY:
+                    easyCustomersCount++;
+                    break;
+                case MEDIUM:
+                    mediumCustomersCount++;
+                    break;
+                case DIFFICULT:
+                    difficultCustomersCount++;
+                    break;
+            }
+        }
+
+        // Return the customer statistics
         return "\n\nTotal Number of Customers Created: " + totalCustomersCreated +
                 "\n\tTotal Number of Easy Customers: " + easyCustomersCount +
                 "\n\tTotal Number of Medium Customers: " + mediumCustomersCount +
@@ -438,7 +508,7 @@ public class SimulationLogic {
         StringBuilder output = new StringBuilder();
         output.append("Simulation Results");
 
-        output.append(generateCustomerStats());
+        output.append(generateCustomerStats(customers));
 
         for (int i = 0; i < totalCustomersCheckedOutPerLine.length; i++) {
             output.append(generateCheckoutLineStats(i));

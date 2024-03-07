@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="850fd06c-5853-47bd-81ea-e7aa9be36350" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/program8/Customer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/program8/Customer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/program8/CustomerQueue.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/program8/CustomerQueue.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/program8/RetailCheckoutSimulation.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/program8/RetailCheckoutSimulation.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/program8/SimulationLogic.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/program8/SimulationLogic.java" afterDir="false" />
     </list>
@@ -63,6 +61,7 @@
     "project.structure.last.edited": "SDKs",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "com.github.copilot.settings.ApplicationConfigurable",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -113,6 +112,8 @@
       <workItem from="1709469515886" duration="5815000" />
       <workItem from="1709594878674" duration="30957000" />
       <workItem from="1709708089229" duration="3105000" />
+      <workItem from="1709734522083" duration="8476000" />
+      <workItem from="1709770597512" duration="6864000" />
     </task>
     <servers />
   </component>
@@ -121,5 +122,9 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>
